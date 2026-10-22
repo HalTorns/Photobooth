@@ -3,7 +3,7 @@ export type Filter = "normal" | "mono" | "sepia" | "warm";
 export type Asset = {
   id: string;
   name: string;
-  kind: "frame" | "sticker";
+  kind: "frame" | "montage-frame" | "sticker";
   enabled: boolean;
   data: string;
 };
@@ -22,7 +22,7 @@ export type EventConfig = {
   audio: boolean;
   mirror: boolean;
   quality: "auto" | "eco" | "high";
-  layout: "grid" | "strip" | "square";
+  layout: "photomaton" | "grid" | "strip" | "square";
   returnSeconds: number;
   cloud: boolean;
   gallery: string;
@@ -63,7 +63,7 @@ export const api = <T = any>(operation: string, input?: unknown): Promise<T> =>
   window.photobooth.invoke(operation, input);
 export const modeNames: Record<Mode, string> = {
   photo: "Photo",
-  series: "Série",
+  series: "Photomaton",
   gif: "GIF animé",
   boomerang: "Boomerang",
   video: "Vidéo",

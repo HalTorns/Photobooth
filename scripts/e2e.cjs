@@ -49,6 +49,7 @@ const errors = [];
           countdown: 1,
           interval: 1,
           seriesCount: 3,
+          layout: "grid",
           duration: 1,
           fps: 4,
           videoDuration: 1,
@@ -78,7 +79,7 @@ const errors = [];
     for (const mode of ["photo", "series", "gif", "boomerang", "video"]) {
       const names = {
         photo: "Photo",
-        series: "Série",
+        series: "Photomaton 3 photos",
         gif: "GIF animé",
         boomerang: "Boomerang",
         video: "Vidéo",

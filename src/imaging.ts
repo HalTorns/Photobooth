@@ -1,4 +1,5 @@
 import type { Asset, Filter } from "./types";
+import layouts from "../assets/layouts.json";
 export const filters: Record<Filter, string> = {
   normal: "none",
   mono: "grayscale(1)",
@@ -95,10 +96,32 @@ export function compose(
 }
 export async function montage(
   images: string[],
-  layout: "grid" | "strip" | "square",
+  layout: "photomaton" | "grid" | "strip" | "square",
   label: string,
+  frame: HTMLImageElement | null = null,
 ) {
   const loaded = await Promise.all(images.map(loadImage));
+  if (layout === "photomaton") {
+    if (loaded.length !== 6)
+      throw new Error("Le photomaton nécessite six photos.");
+    const spec = layouts.photomaton;
+    const c = canvas(spec.width, spec.height);
+    const ctx = c.getContext("2d")!;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, c.width, c.height);
+    loaded.forEach((img, i) => {
+      const box = spec.windows[i];
+      ctx.save();
+      ctx.translate(box.x, box.y);
+      ctx.beginPath();
+      ctx.rect(0, 0, box.width, box.height);
+      ctx.clip();
+      drawCover(ctx, img, box.width, box.height, img.width, img.height);
+      ctx.restore();
+    });
+    if (frame) ctx.drawImage(frame, 0, 0, c.width, c.height);
+    return c;
+  }
   const cols =
     layout === "strip"
       ? 1
@@ -124,6 +147,9 @@ export async function montage(
       gap + (i % cols) * (cellW + gap),
       gap + Math.floor(i / cols) * (cellH + gap),
     );
+    ctx.beginPath();
+    ctx.rect(0, 0, cellW, cellH);
+    ctx.clip();
     drawCover(ctx, img, cellW, cellH, img.width, img.height);
     ctx.restore();
   });

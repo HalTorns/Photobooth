@@ -4,25 +4,19 @@ import {
   ArrowLeft,
   ArrowRight,
   Camera as CameraIcon,
-  Check,
   ChevronRight,
-  Clapperboard,
   Download,
   FolderOpen,
-  Grid2X2,
   Image,
   Images,
-  Infinity as Loop,
   Lock,
   Monitor,
   Plus,
   QrCode,
   RefreshCw,
   Settings,
-  ShieldCheck,
   Sparkles,
   Upload,
-  Video,
   X,
 } from "lucide-react";
 import QRCode from "qrcode";
@@ -48,20 +42,9 @@ import {
   montage,
 } from "./imaging";
 import { useCamera } from "./useCamera";
-const modeIcons = {
-  photo: CameraIcon,
-  series: Images,
-  gif: Clapperboard,
-  boomerang: Loop,
-  video: Video,
-};
-const subtitles: Record<Mode, string> = {
-  photo: "Un sourire, un souvenir.",
-  series: "Plusieurs instants, une seule histoire.",
-  gif: "Quelques secondes qui tournent en boucle.",
-  boomerang: "Un petit mouvement, un grand effet.",
-  video: "La soirée se raconte aussi en vidéo.",
-};
+import GuestView from "./GuestView";
+import photoGuide from "../assets/templates/photo-reperes.png";
+import montageGuide from "../assets/templates/photomaton-reperes.png";
 const delay = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 type Result = { id: string; image: string; video?: string; outputs: string[] };
 export default function App() {
@@ -73,6 +56,11 @@ export default function App() {
   const [mode, setMode] = useState<Mode>("photo");
   const [filter, setFilter] = useState<Filter>("normal");
   const [frame, setFrame] = useState("");
+  const [frameEnabled, setFrameEnabled] = useState(false);
+  const [montageFrame, setMontageFrame] = useState("");
+  const [montageFrameEnabled, setMontageFrameEnabled] = useState(false);
+  const [montageFrameImg, setMontageFrameImg] =
+    useState<HTMLImageElement | null>(null);
   const [sticker, setSticker] = useState("");
   const [frameImg, setFrameImg] = useState<HTMLImageElement | null>(null);
   const [stickerImg, setStickerImg] = useState<HTMLImageElement | null>(null);
@@ -103,6 +91,9 @@ export default function App() {
     setMode(event.modes[0]);
     setFilter(event.filters[0]);
     setFrame("");
+    setFrameEnabled(false);
+    setMontageFrame("");
+    setMontageFrameEnabled(false);
     setSticker("");
     setResult(null);
   }, [event?.id]);
@@ -112,7 +103,14 @@ export default function App() {
   }, [event, mode, filter]);
   useEffect(() => {
     let cancelled = false;
-    assetImage(frame, event?.assets || [])
+    setFrameImg(null);
+    const selected =
+      event?.assets.find(
+        (a) => a.id === frame && a.kind === "frame" && a.enabled,
+      )?.id ||
+      event?.assets.find((a) => a.kind === "frame" && a.enabled)?.id ||
+      "";
+    assetImage(frameEnabled ? selected : "", event?.assets || [])
       .then((img) => {
         if (!cancelled) setFrameImg(img);
       })
@@ -120,7 +118,25 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [frame, event?.assets, notify]);
+  }, [frame, frameEnabled, event?.assets, notify]);
+  useEffect(() => {
+    let cancelled = false;
+    setMontageFrameImg(null);
+    const selected =
+      event?.assets.find(
+        (a) => a.id === montageFrame && a.kind === "montage-frame" && a.enabled,
+      )?.id ||
+      event?.assets.find((a) => a.kind === "montage-frame" && a.enabled)?.id ||
+      "";
+    assetImage(montageFrameEnabled ? selected : "", event?.assets || [])
+      .then((img) => {
+        if (!cancelled) setMontageFrameImg(img);
+      })
+      .catch(notify);
+    return () => {
+      cancelled = true;
+    };
+  }, [montageFrame, montageFrameEnabled, event?.assets, notify]);
   useEffect(() => {
     let cancelled = false;
     assetImage(sticker, event?.assets || [])
@@ -162,7 +178,12 @@ export default function App() {
           ctx.drawImage(raw, 0, 0);
           raw = mirrored;
         }
-        const out = compose(raw, filter, frameImg, stickerImg);
+        const out = compose(
+          raw,
+          filter,
+          mode === "series" ? null : frameImg,
+          stickerImg,
+        );
         latestPreview.current = out;
         const target = preview.current;
         if (target) {
@@ -188,6 +209,7 @@ export default function App() {
     camera.snapshot,
     filter,
     frameImg,
+    mode,
     stickerImg,
   ]);
   const closeResult = useCallback(() => {
@@ -247,7 +269,12 @@ export default function App() {
       raw.width,
       raw.height,
     );
-    const out = compose(sized, filter, frameImg, stickerImg);
+    const out = compose(
+      sized,
+      filter,
+      mode === "series" ? null : frameImg,
+      stickerImg,
+    );
     const processed = jpeg(out);
     await api("saveFrame", { id: sessionId, original, processed });
     return processed;
@@ -395,7 +422,14 @@ export default function App() {
         }
         image =
           mode === "series"
-            ? jpeg(await montage(frames, event.layout, event.name))
+            ? jpeg(
+                await montage(
+                  frames,
+                  event.layout,
+                  event.name,
+                  montageFrameEnabled ? montageFrameImg : null,
+                ),
+              )
             : frames[0];
       }
       setPhase("Vos souvenirs prennent forme…");
@@ -440,35 +474,35 @@ export default function App() {
       </div>
     );
   const native = camera.actual.current.startsWith("digicam:");
-  const frames = event.assets.filter((a) => a.kind === "frame" && a.enabled),
-    stickers = event.assets.filter((a) => a.kind === "sticker" && a.enabled);
   return (
-    <div className="app-shell">
-      <header className="topbar">
-        <div className="brand">
-          <span className="brand-mark">
-            <Aperture size={25} />
-          </span>
-          <span>
-            photobooth<span className="brand-dot">.</span>
-          </span>
-          <span className="brand-label">LES BONS MOMENTS RESTENT</span>
-        </div>
-        <div className="top-actions">
-          <span className="offline-label">
-            <span className="dot" /> Capture hors ligne
-          </span>
-          <button
-            className="icon-button"
-            title="Espace organisateur"
-            aria-label="Espace organisateur"
-            disabled={busy}
-            onClick={showAdmin}
-          >
-            <Settings size={20} />
-          </button>
-        </div>
-      </header>
+    <div className={"app-shell" + (view === "booth" ? " guest-shell" : "")}>
+      {view === "admin" && (
+        <header className="topbar">
+          <div className="brand">
+            <span className="brand-mark">
+              <Aperture size={25} />
+            </span>
+            <span>
+              photobooth<span className="brand-dot">.</span>
+            </span>
+            <span className="brand-label">LES BONS MOMENTS RESTENT</span>
+          </div>
+          <div className="top-actions">
+            <span className="offline-label">
+              <span className="dot" /> Capture hors ligne
+            </span>
+            <button
+              className="icon-button"
+              title="Espace organisateur"
+              aria-label="Espace organisateur"
+              disabled={busy}
+              onClick={showAdmin}
+            >
+              <Settings size={20} />
+            </button>
+          </div>
+        </header>
+      )}
       {error && (
         <div className="error-banner" role="alert">
           <span>{error}</span>
@@ -492,250 +526,49 @@ export default function App() {
           }}
         />
       ) : (
-        <>
-          <main className="booth-layout">
-            <section className="capture-column">
-              <div className="section-heading">
-                <div>
-                  <div className="eyebrow">VOTRE SOIRÉE, VOS SOUVENIRS</div>
-                  <h1>{event.name}</h1>
-                </div>
-                <span
-                  className={"camera-status " + (camera.ready ? "" : "warning")}
-                >
-                  <span className="dot" />
-                  {camera.actual.current === "simulation"
-                    ? "Mode simulation"
-                    : camera.ready
-                      ? "Caméra prête"
-                      : "Connexion…"}
-                </span>
-              </div>
-              <div className="viewfinder">
-                <canvas ref={preview} width={960} height={720} />
-                <span className="viewfinder-corner tl" />
-                <span className="viewfinder-corner tr" />
-                <span className="viewfinder-corner bl" />
-                <span className="viewfinder-corner br" />
-                <div className="viewfinder-top">
-                  <span>
-                    <span className="live-dot" />
-                    {busy ? "CAPTURE EN COURS" : "APERÇU EN DIRECT"}
-                  </span>
-                  <span>4:3</span>
-                </div>
-                {!camera.ready && (
-                  <div className="camera-empty">
-                    <CameraIcon size={44} />
-                    <h2>Retrouvons votre caméra</h2>
-                    <p>{camera.status}</p>
-                    <button className="button light" onClick={camera.reconnect}>
-                      <RefreshCw size={18} /> Reconnecter
-                    </button>
-                  </div>
-                )}
-                {busy && (
-                  <div className="capture-overlay">
-                    {count !== null && (
-                      <div className="countdown" key={count}>
-                        {count}
-                      </div>
-                    )}
-                    <div className="phase">{phase}</div>
-                  </div>
-                )}
-                {!busy && camera.ready && (
-                  <div className="preview-caption">
-                    Installez-vous. Le prochain souvenir, c’est vous.
-                  </div>
-                )}
-              </div>
-              <div className="capture-toolbar">
-                <div className="capture-tip">
-                  <ShieldCheck size={19} />
-                  <span>
-                    Vos souvenirs sont enregistrés
-                    <br />
-                    <strong>directement sur cet ordinateur.</strong>
-                  </span>
-                </div>
-                <button
-                  className="shutter"
-                  disabled={
-                    busy ||
-                    !camera.ready ||
-                    (native && ["gif", "boomerang", "video"].includes(mode)) ||
-                    !boot.pinConfigured
-                  }
-                  onClick={capture}
-                >
-                  <span className="shutter-icon">
-                    <CameraIcon size={24} />
-                  </span>
-                  {busy
-                    ? "Capture en cours…"
-                    : mode === "video"
-                      ? "Enregistrer la vidéo"
-                      : mode === "photo"
-                        ? "Prendre la photo"
-                        : `Lancer ${mode === "series" ? "la série" : mode === "gif" ? "le GIF" : "le boomerang"}`}
-                  <ArrowRight size={21} />
-                </button>
-              </div>
-              <div className="camera-footnote">
-                {camera.status}
-                {native &&
-                  " · Photo et série uniquement avant validation matérielle."}
-              </div>
-            </section>
-            <aside className="creative-column">
-              <div className="creative-intro">
-                <span className="little-spark">
-                  <Sparkles size={20} />
-                </span>
-                <h2>À vous de jouer</h2>
-                <p>Un instant à votre image.</p>
-              </div>
-              <div className="control-section">
-                <div className="control-label">
-                  <span>01</span> Choisissez votre moment
-                </div>
-                <div className="mode-grid">
-                  {event.modes.map((m) => {
-                    const Icon = modeIcons[m];
-                    const unavailable =
-                      native && ["gif", "boomerang", "video"].includes(m);
-                    return (
-                      <button
-                        key={m}
-                        className={
-                          "mode-button " + (mode === m ? "selected" : "")
-                        }
-                        disabled={busy || unavailable}
-                        title={
-                          unavailable
-                            ? "Disponible après validation du pilote caméra"
-                            : modeNames[m]
-                        }
-                        onClick={() => setMode(m)}
-                      >
-                        <Icon size={23} />
-                        <span>{modeNames[m]}</span>
-                        {mode === m && (
-                          <Check size={13} className="selection-check" />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-                <p className="mode-subtitle">{subtitles[mode]}</p>
-              </div>
-              <div className="control-section">
-                <div className="control-label">
-                  <span>02</span> Ajoutez votre touche
-                </div>
-                <div className="filters">
-                  {event.filters.map((f) => (
-                    <button
-                      key={f}
-                      disabled={busy}
-                      onClick={() => setFilter(f)}
-                      className={
-                        "filter-chip " + (filter === f ? "selected" : "")
-                      }
-                    >
-                      <span className={"filter-dot " + f} />
-                      {filterNames[f]}
-                    </button>
-                  ))}
-                </div>
-                {(frames.length > 0 || stickers.length > 0) && (
-                  <div className="asset-selects">
-                    {frames.length > 0 && (
-                      <label>
-                        Cadre
-                        <select
-                          value={frame}
-                          aria-label="Cadre"
-                          disabled={busy}
-                          onChange={(e) => setFrame(e.target.value)}
-                        >
-                          <option value="">Sans cadre</option>
-                          {frames.map((a) => (
-                            <option key={a.id} value={a.id}>
-                              {a.name}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    )}
-                    {stickers.length > 0 && (
-                      <label>
-                        Sticker
-                        <select
-                          value={sticker}
-                          aria-label="Sticker"
-                          disabled={busy}
-                          onChange={(e) => setSticker(e.target.value)}
-                        >
-                          <option value="">Sans sticker</option>
-                          {stickers.map((a) => (
-                            <option key={a.id} value={a.id}>
-                              {a.name}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    )}
-                  </div>
-                )}
-              </div>
-              {qr ? (
-                <div className="qr-card">
-                  <img src={qr} alt="QR code de la galerie de l’événement" />
-                  <div>
-                    <div className="eyebrow">EMPORTez LA SOIRÉE</div>
-                    <h3>
-                      Vos photos,
-                      <br />
-                      dans votre poche.
-                    </h3>
-                    <p>
-                      Scannez pour ouvrir la galerie.
-                      <br />
-                      Les médias arrivent après synchronisation.
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="memory-card">
-                  <Aperture size={30} />
-                  <h3>
-                    Un moment passe.
-                    <br />
-                    Le souvenir reste.
-                  </h3>
-                  <p>
-                    Photo, mouvement ou éclat de rire :<br />
-                    faites comme chez vous.
-                  </p>
-                </div>
-              )}
-              <button
-                className="recent-link"
-                onClick={() => setGallery(true)}
-                disabled={busy}
-              >
-                <Grid2X2 size={18} /> Les derniers souvenirs{" "}
-                <ChevronRight size={18} />
-              </button>
-            </aside>
-          </main>
-          <footer className="footer">
-            <span>FAIT POUR LES MOMENTS QUI COMPTENT.</span>
-            <span>Photobooth · v{boot.version}</span>
-          </footer>
-        </>
+        <GuestView
+          event={event}
+          mode={mode}
+          filter={filter}
+          frame={mode === "series" ? montageFrame : frame}
+          frameEnabled={mode === "series" ? montageFrameEnabled : frameEnabled}
+          sticker={sticker}
+          busy={busy}
+          ready={camera.ready}
+          native={native}
+          status={camera.status}
+          count={count}
+          phase={phase}
+          qr={qr}
+          preview={preview}
+          captureDisabled={
+            busy ||
+            !camera.ready ||
+            !boot.pinConfigured ||
+            (native && ["gif", "boomerang", "video"].includes(mode)) ||
+            (mode === "series"
+              ? montageFrameEnabled &&
+                event.layout === "photomaton" &&
+                event.assets.some(
+                  (a) => a.enabled && a.kind === "montage-frame",
+                ) &&
+                !montageFrameImg
+              : frameEnabled &&
+                event.assets.some((a) => a.enabled && a.kind === "frame") &&
+                !frameImg)
+          }
+          onMode={setMode}
+          onFilter={setFilter}
+          onFrame={mode === "series" ? setMontageFrame : setFrame}
+          onFrameEnabled={
+            mode === "series" ? setMontageFrameEnabled : setFrameEnabled
+          }
+          onSticker={setSticker}
+          onCapture={capture}
+          onAdmin={showAdmin}
+          onReconnect={camera.reconnect}
+          onRecent={() => setGallery(true)}
+        />
       )}
       {(!boot.pinConfigured || pinModal) && (
         <PinDialog
@@ -756,8 +589,6 @@ export default function App() {
             aria-modal="true"
             aria-label="Votre souvenir"
           >
-            <div className="eyebrow">C’EST DANS LA BOÎTE</div>
-            <h2>Ce moment est à vous.</h2>
             {result.video ? (
               <video controls autoPlay loop src={result.video} />
             ) : (
@@ -768,17 +599,9 @@ export default function App() {
               />
             )}
             <div className="result-bottom">
-              <div>
-                <p>
-                  <Check size={17} /> Enregistré sur cet ordinateur
-                </p>
-                <small>
-                  {result.outputs.length} fichier
-                  {result.outputs.length > 1 ? "s" : ""} exporté
-                  {result.outputs.length > 1 ? "s" : ""} · Retour dans{" "}
-                  {returnIn} s
-                </small>
-              </div>
+              <span className="sr-only">
+                Enregistré. Retour dans {returnIn} secondes.
+              </span>
               {qr && (
                 <img
                   className="result-qr"
@@ -1092,6 +915,7 @@ function Admin({
         type="number"
         min={min}
         max={max}
+        disabled={key === "seriesCount" && draft.layout === "photomaton"}
         value={draft[key]}
         onChange={(e) =>
           change(
@@ -1302,9 +1126,18 @@ function Admin({
                   <select
                     value={draft.layout}
                     onChange={(e) =>
-                      change("layout", e.target.value as EventConfig["layout"])
+                      setDraft((prev) => ({
+                        ...prev,
+                        layout: e.target.value as EventConfig["layout"],
+                        ...(e.target.value === "photomaton"
+                          ? { seriesCount: 6 }
+                          : {}),
+                      }))
                     }
                   >
+                    <option value="photomaton">
+                      Photomaton 6 photos · vertical 2 × 3
+                    </option>
                     <option value="grid">Grille paysage</option>
                     <option value="strip">Bande verticale</option>
                     <option value="square">Grille compacte</option>
@@ -1324,6 +1157,7 @@ function Admin({
         )}
         {tab === "creative" && (
           <>
+            <FrameTemplates onError={onError} />
             <div className="settings-card">
               <h3>Filtres disponibles</h3>
               <div className="checkbox-list">
@@ -1342,34 +1176,39 @@ function Admin({
                 <div>
                   <h3>Cadres & stickers PNG</h3>
                   <p>
-                    Cadres au ratio 4:3. Les stickers se placent en bas à
-                    droite.
+                    Cadres photo au ratio 4:3. Cadres photomaton : 1800 × 2400
+                    px, appliqués une fois au montage. Les fenêtres des photos
+                    doivent rester transparentes.
                   </p>
                 </div>
               </div>
               <div className="button-row">
-                {(["frame", "sticker"] as const).map((kind) => (
-                  <button
-                    key={kind}
-                    className="button secondary"
-                    onClick={async () => {
-                      try {
-                        const asset = await api<Asset | null>(
-                          "importAsset",
-                          kind,
-                        );
-                        if (asset) change("assets", [...draft.assets, asset]);
-                      } catch (e) {
-                        onError(e);
-                      }
-                    }}
-                  >
-                    <Plus size={18} />
-                    {kind === "frame"
-                      ? "Importer un cadre"
-                      : "Importer un sticker"}
-                  </button>
-                ))}
+                {(["frame", "montage-frame", "sticker"] as const).map(
+                  (kind) => (
+                    <button
+                      key={kind}
+                      className="button secondary"
+                      onClick={async () => {
+                        try {
+                          const asset = await api<Asset | null>(
+                            "importAsset",
+                            kind,
+                          );
+                          if (asset) change("assets", [...draft.assets, asset]);
+                        } catch (e) {
+                          onError(e);
+                        }
+                      }}
+                    >
+                      <Plus size={18} />
+                      {kind === "frame"
+                        ? "Importer un cadre"
+                        : kind === "montage-frame"
+                          ? "Importer un cadre photomaton"
+                          : "Importer un sticker"}
+                    </button>
+                  ),
+                )}
               </div>
               <div className="asset-grid">
                 {draft.assets.map((a) => (
@@ -1389,7 +1228,13 @@ function Admin({
                         )
                       }
                     />
-                    <span>{a.kind === "frame" ? "Cadre" : "Sticker"}</span>
+                    <span>
+                      {a.kind === "frame"
+                        ? "Cadre photo"
+                        : a.kind === "montage-frame"
+                          ? "Cadre photomaton"
+                          : "Sticker"}
+                    </span>
                   </article>
                 ))}
               </div>
@@ -1577,5 +1422,69 @@ function CheckField({
       />
       <span>{label}</span>
     </label>
+  );
+}
+
+function FrameTemplates({ onError }: { onError: (e: unknown) => void }) {
+  const [message, setMessage] = useState("");
+  return (
+    <div className="settings-card">
+      <h3>Modèles de cadres personnalisables</h3>
+      <p>
+        Téléchargez le modèle PNG, ajoutez vos textes et décorations, puis
+        importez-le comme cadre. Conservez ses dimensions et la transparence des
+        fenêtres photo. Les repères sont un guide séparé, à ne pas importer.
+      </p>
+      <div className="template-cards">
+        {(
+          [
+            {
+              kind: "photo",
+              title: "Photo classique",
+              dimensions: "1800 × 1350 px · 4:3",
+              image: photoGuide,
+            },
+            {
+              kind: "photomaton",
+              title: "Photomaton 6 photos",
+              dimensions: "1800 × 2400 px · 2 colonnes × 3 rangées",
+              image: montageGuide,
+            },
+          ] as const
+        ).map((template) => (
+          <article className="template-card" key={template.kind}>
+            <img
+              src={template.image}
+              alt={"Repères du cadre " + template.title}
+            />
+            <h4>{template.title}</h4>
+            <p>{template.dimensions}</p>
+            <div className="button-row">
+              {[false, true].map((guide) => (
+                <button
+                  key={String(guide)}
+                  className="button secondary"
+                  onClick={async () => {
+                    try {
+                      const saved = await api<boolean>("exportFrameTemplate", {
+                        kind: template.kind,
+                        guide,
+                      });
+                      if (saved) setMessage("Fichier enregistré.");
+                    } catch (e) {
+                      onError(e);
+                    }
+                  }}
+                >
+                  <Download size={16} />
+                  {guide ? "Repères PNG" : "Modèle PNG"}
+                </button>
+              ))}
+            </div>
+          </article>
+        ))}
+      </div>
+      {message && <p role="status">{message}</p>}
+    </div>
   );
 }

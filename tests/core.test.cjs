@@ -17,6 +17,9 @@ const { DigiCam } = require("../electron/digicam.cjs");
 test("configuration rejects unsupported modes, missing filters and invalid limits", () => {
   const event = defaultEvent(os.tmpdir());
   assert.equal(eventSchema.parse(event).seriesCount, 6);
+  assert.equal(event.layout,'photomaton');
+  assert.equal(eventSchema.safeParse({...event,seriesCount:3}).success,false);
+  assert.equal(eventSchema.safeParse({...event,seriesCount:3,layout:'grid'}).success,true);
   for (const override of [
     { modes: [] },
     { modes: ["panorama"] },

@@ -2,11 +2,12 @@ const { z } = require("zod");
 const crypto = require("node:crypto");
 const fs = require("node:fs/promises");
 const path = require("node:path");
+const fsSync = require("node:fs");
 const modes = ["photo", "series", "gif", "boomerang", "video"];
 const asset = z.object({
   id: z.string().uuid(),
   name: z.string().max(100),
-  kind: z.enum(["frame", "sticker"]),
+  kind: z.enum(["frame", "montage-frame", "sticker"]),
   enabled: z.boolean(),
   data: z.string().startsWith("data:image/png;base64,").max(12_000_000),
 });
@@ -26,7 +27,7 @@ const eventSchema = z
     audio: z.boolean(),
     mirror: z.boolean(),
     quality: z.enum(["auto", "eco", "high"]),
-    layout: z.enum(["grid", "strip", "square"]),
+    layout: z.enum(["photomaton", "grid", "strip", "square"]),
     returnSeconds: z.number().int().min(3).max(60),
     cloud: z.boolean(),
     gallery: z
@@ -43,6 +44,12 @@ const eventSchema = z
     assets: z.array(asset).max(30),
   })
   .superRefine((event, ctx) => {
+    if (event.layout === "photomaton" && event.seriesCount !== 6)
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["seriesCount"],
+        message: "Le format photomaton utilise exactement six photos.",
+      });
     if (event.assets.reduce((n, a) => n + a.data.length, 0) > 24_000_000)
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -50,6 +57,26 @@ const eventSchema = z
         message: "Les éléments graphiques de l’événement dépassent 24 Mo.",
       });
   });
+function defaultFrameAssets() {
+  return [
+    { kind: "frame", file: "photo-modele.png", name: "Classique blanc" },
+    {
+      kind: "montage-frame",
+      file: "photomaton-modele.png",
+      name: "Photomaton blanc",
+    },
+  ].map(({ kind, file, name }) => ({
+    id: crypto.randomUUID(),
+    kind,
+    name,
+    enabled: true,
+    data:
+      "data:image/png;base64," +
+      fsSync
+        .readFileSync(path.join(__dirname, "../assets/templates", file))
+        .toString("base64"),
+  }));
+}
 function defaultEvent(storage) {
   return {
     id: crypto.randomUUID(),
@@ -66,13 +93,27 @@ function defaultEvent(storage) {
     audio: false,
     mirror: true,
     quality: "auto",
-    layout: "grid",
+    layout: "photomaton",
     returnSeconds: 12,
     cloud: false,
     gallery: "",
     filters: ["normal", "mono", "sepia", "warm"],
-    assets: [],
+    assets: defaultFrameAssets(),
   };
+}
+function withDefaultFrames(assets) {
+  const result = [...assets];
+  let total = result.reduce((n, a) => n + a.data.length, 0);
+  for (const frame of defaultFrameAssets())
+    if (
+      !result.some((a) => a.kind === frame.kind) &&
+      result.length < 30 &&
+      total + frame.data.length <= 24_000_000
+    ) {
+      result.push(frame);
+      total += frame.data.length;
+    }
+  return result;
 }
 function slug(name) {
   return (
@@ -96,7 +137,16 @@ async function atomicWrite(file, data) {
   } finally {
     await handle.close();
   }
-  await fs.rename(tmp, file);
+  for (let attempt = 0; ; attempt++) {
+    try {
+      await fs.rename(tmp, file);
+      break;
+    } catch (error) {
+      if (attempt >= 7 || !["EPERM", "EBUSY", "EACCES"].includes(error.code))
+        throw error;
+      await new Promise((resolve) => setTimeout(resolve, 25 * (attempt + 1)));
+    }
+  }
 }
 function hashPin(pin, salt = crypto.randomBytes(16).toString("hex")) {
   return { salt, hash: crypto.scryptSync(pin, salt, 32).toString("hex") };
@@ -126,6 +176,8 @@ function decodeImage(data) {
 module.exports = {
   eventSchema,
   defaultEvent,
+  defaultFrameAssets,
+  withDefaultFrames,
   eventRoot,
   atomicWrite,
   hashPin,

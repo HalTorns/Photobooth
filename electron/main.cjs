@@ -14,6 +14,7 @@ const { z } = require("zod");
 const {
   eventSchema,
   defaultEvent,
+  withDefaultFrames,
   eventRoot,
   atomicWrite,
   hashPin,
@@ -39,6 +40,7 @@ let failedPins = 0,
   nativeCaptureBusy = false;
 const digicam = new DigiCam();
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const manifestQueues = new Map();
 function activeEvent() {
   return state.events.find((e) => e.id === state.activeId);
 }
@@ -70,18 +72,40 @@ async function load() {
   try {
     const raw = JSON.parse(await fs.readFile(configFile, "utf8"));
     const schema = z.object({
-      version: z.literal(1),
+      version: z.literal(2),
       pin: z
         .object({ salt: z.string().length(32), hash: z.string().length(64) })
         .nullable(),
       activeId: z.string().uuid(),
       events: z.array(eventSchema).min(1).max(100),
     });
-    state = schema.parse(raw);
+    const upgrading = raw.version === 1;
+    state = schema.parse(
+      upgrading
+        ? {
+            ...raw,
+            version: 2,
+            events: raw.events.map((e) => ({
+              ...e,
+              ...(e.layout === "grid" && e.seriesCount === 6
+                ? { layout: "photomaton" }
+                : {}),
+              assets: withDefaultFrames(e.assets),
+            })),
+          }
+        : raw,
+    );
     if (!state.events.some((e) => e.id === state.activeId))
       throw new Error("Événement actif introuvable.");
+    if (upgrading) {
+      await atomicWrite(
+        configFile + ".v1.backup",
+        JSON.stringify(raw, null, 2),
+      );
+      await persist();
+    }
   } catch (e) {
-    if (e.code !== "ENOENT")
+    if (e.code !== "ENOENT" || e.path !== configFile)
       throw new Error(
         "Configuration illisible. Vos fichiers ont été conservés. Restaurez settings.json depuis une sauvegarde. " +
           e.message,
@@ -89,22 +113,34 @@ async function load() {
     const event = defaultEvent(
       path.join(app.getPath("pictures"), "Photobooth"),
     );
-    state = { version: 1, pin: null, activeId: event.id, events: [event] };
+    state = { version: 2, pin: null, activeId: event.id, events: [event] };
     await persist();
   }
 }
 async function manifest(record) {
-  await atomicWrite(
-    path.join(record.root, "sessions", record.id + ".json"),
-    JSON.stringify(
-      {
-        ...record,
-        frames: record.frames.map((f) => path.relative(record.root, f)),
-      },
-      null,
-      2,
-    ),
+  const body = JSON.stringify(
+    {
+      ...record,
+      frames: record.frames.map((f) => path.relative(record.root, f)),
+    },
+    null,
+    2,
   );
+  const queued = (manifestQueues.get(record.id) || Promise.resolve())
+    .catch(() => {})
+    .then(() =>
+      atomicWrite(
+        path.join(record.root, "sessions", record.id + ".json"),
+        body,
+      ),
+    );
+  manifestQueues.set(record.id, queued);
+  try {
+    await queued;
+  } finally {
+    if (manifestQueues.get(record.id) === queued)
+      manifestQueues.delete(record.id);
+  }
 }
 function checkSession(id) {
   if (!activeSession || id !== activeSession.id)
@@ -267,12 +303,14 @@ const handlers = {
   },
   importAsset: async (kind) => {
     admin();
-    z.enum(["frame", "sticker"]).parse(kind);
+    z.enum(["frame", "montage-frame", "sticker"]).parse(kind);
     const r = await dialog.showOpenDialog(win, {
       title:
         kind === "frame"
           ? "Importer un cadre transparent"
-          : "Importer un sticker",
+          : kind === "montage-frame"
+            ? "Importer un cadre photomaton 1800 × 2400"
+            : "Importer un sticker",
       filters: [{ name: "PNG transparent", extensions: ["png"] }],
       properties: ["openFile"],
     });
@@ -283,6 +321,15 @@ const handlers = {
     const bytes = await fs.readFile(file);
     if (bytes.subarray(0, 8).toString("hex") !== "89504e470d0a1a0a")
       throw new Error("Fichier PNG invalide.");
+    if (
+      kind === "montage-frame" &&
+      (bytes.length < 24 ||
+        bytes.readUInt32BE(16) !== 1800 ||
+        bytes.readUInt32BE(20) !== 2400)
+    )
+      throw new Error(
+        "Le cadre photomaton doit mesurer exactement 1800 × 2400 pixels. Téléchargez le modèle fourni.",
+      );
     return {
       id: crypto.randomUUID(),
       name: path.basename(file),
@@ -292,6 +339,26 @@ const handlers = {
     };
   },
   cameras: async () => digicam.list(),
+  exportFrameTemplate: async (input) => {
+    admin();
+    const { kind, guide } = z
+      .object({ kind: z.enum(["photo", "photomaton"]), guide: z.boolean() })
+      .parse(input);
+    const filename = `${kind}-${guide ? "reperes" : "modele"}.png`;
+    const response = await dialog.showSaveDialog(win, {
+      title: guide
+        ? "Enregistrer les repères de personnalisation"
+        : "Enregistrer le modèle PNG personnalisable",
+      defaultPath: filename,
+      filters: [{ name: "Image PNG", extensions: ["png"] }],
+    });
+    if (response.canceled) return false;
+    await atomicWrite(
+      response.filePath,
+      await fs.readFile(path.join(__dirname, "../assets/templates", filename)),
+    );
+    return true;
+  },
   connectCamera: async (input) => {
     const id = z.string().max(300).parse(input);
     const configured = activeEvent().camera;
@@ -628,7 +695,7 @@ app
       minWidth: 1024,
       minHeight: 720,
       backgroundColor: "#f7f5ef",
-      icon: path.join(__dirname, '../assets/icon.ico'),
+      icon: path.join(__dirname, "../assets/icon.ico"),
       show: !process.env.PHOTOBOOTH_TEST,
       webPreferences: {
         backgroundThrottling: false,

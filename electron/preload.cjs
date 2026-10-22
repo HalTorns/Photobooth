@@ -12,6 +12,7 @@ const allowed = new Set([
   "exportEvent",
   "importEvent",
   "importAsset",
+  "exportFrameTemplate",
   "cameras",
   "connectCamera",
   "cameraPreview",

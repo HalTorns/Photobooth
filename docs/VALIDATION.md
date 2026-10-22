@@ -1,6 +1,21 @@
 # Validation de développement — 22 octobre 2026
 
-Version 0.1.0, Windows x64. Les essais logiciels ne remplacent pas la recette sur le Nikon D3200 et le PC cible.
+Windows x64. Les essais logiciels ne remplacent pas la recette sur le Nikon D3200 et le PC cible.
+
+## V0.2 — interface invités et cadres
+
+- Interface limitée au nom de l’événement, aperçu caméra et commandes latérales ; QR sans texte décoratif.
+- Compilation TypeScript/Vite et huit tests du moteur réussis, dont une simulation de verrouillage temporaire Windows pour vérifier la reprise des écritures sans effacement du fichier existant.
+- Suite Electron des cinq modes, puis webcam et microphone simulés par Chromium : réussies.
+- Migration de V0.1 testée avec conservation du PIN, du dossier, de l’identifiant d’événement et sauvegarde exacte de l’ancienne configuration.
+- Téléchargements des modèles et repères via les boutons organisateur : dimensions et transparence contrôlées. Un PNG de mauvaise taille est refusé pour le photomaton.
+- Case Cadre manipulée dans le kiosque pour les quatre modes classiques. JPEG exportés avec et sans cadre contrôlés pixel par pixel.
+- Photomaton : six originaux, export 1800 × 2400, six fenêtres en 2 × 3, marges blanches, bas personnalisé quand coché et blanc quand décoché. Vérification que le cadre photo classique ne se répète pas dans les cellules.
+- Les tests correspondants sont dans `scripts/frames-test.cjs`. Captures : `test-results/guest-minimal.png` et `photomaton-custom.png`.
+- Installateur local : `release/Photobooth Setup 0.2.0.exe`. SHA-256 : `1AEE0C94409E8C7F8A5648218659E89E93EE07A7E311D0B917313648C621CD4F`.
+- Les suites complètes des cinq modes et des nouveaux cadres ont également réussi contre l’exécutable Windows empaqueté `release/win-unpacked/Photobooth.exe`, y compris les téléchargements des PNG embarqués, la migration et le photomaton en kiosque.
+
+## Historique V0.1
 
 ## Résultats exécutés
 

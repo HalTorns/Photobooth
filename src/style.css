@@ -12,6 +12,240 @@
   --line: #e3e6dc;
   --serif: Georgia, "Times New Roman", serif;
 }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.guest-shell {
+  height: 100dvh;
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow: hidden;
+}
+.guest-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex: none;
+  min-height: 48px;
+}
+.guest-header h1 {
+  margin: 0;
+  font-size: clamp(28px, 3vw, 42px);
+  overflow-wrap: anywhere;
+}
+.guest-header .icon-button {
+  background: transparent;
+  color: #8b9789;
+}
+.guest-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 272px;
+  gap: 28px;
+  flex: 1;
+  min-height: 0;
+}
+.guest-capture {
+  container-type: size;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+}
+.guest-capture .viewfinder {
+  width: min(100cqw, calc(100cqh * 4 / 3));
+  aspect-ratio: 4/3;
+  height: auto;
+  max-height: none;
+  min-height: 0;
+  border-radius: 20px;
+  box-shadow: none;
+}
+.guest-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 0;
+}
+.guest-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 2px 5px 4px 2px;
+  scrollbar-width: thin;
+}
+.guest-tools .mode-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.guest-tools .mode-button {
+  min-height: 70px;
+  font-size: 11px;
+  gap: 8px;
+  padding: 10px 6px;
+}
+.guest-tools .filters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.guest-tools .filter-chip {
+  min-height: 42px;
+  justify-content: flex-start;
+  padding: 9px 10px;
+  font-size: 11px;
+}
+.guest-frame-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+}
+.guest-frame-toggle {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  align-items: center;
+  min-height: 42px;
+  padding: 6px 2px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.guest-frame-toggle input {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+}
+.guest-frame-controls select {
+  grid-column: 1;
+  font-size: 11px;
+  min-height: 40px;
+}
+.guest-montage-preview {
+  width: 62px;
+  height: 83px;
+  border: 1px solid #dce2d8;
+  border-radius: 4px;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+.guest-bottom {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: none;
+}
+.guest-extras {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+.guest-extras .icon-button {
+  margin-left: auto;
+  background: transparent;
+  color: #7d8e79;
+}
+.guest-qr {
+  width: 84px;
+  height: 84px;
+  border-radius: 6px;
+}
+.guest-bottom .shutter {
+  min-width: 0;
+  width: 100%;
+  min-height: 66px;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 13px;
+  gap: 12px;
+}
+.guest-bottom .shutter > svg {
+  margin: 0;
+}
+.guest-shell .error-banner {
+  margin: 0;
+  flex: none;
+}
+.template-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.template-card {
+  border: 1px solid #e0e5d9;
+  border-radius: 10px;
+  padding: 18px;
+}
+.template-card h4 {
+  margin: 14px 0 8px;
+  font-weight: 600;
+}
+.template-card p {
+  font-size: 11px;
+}
+.template-card > img {
+  height: 160px;
+  width: 100%;
+  object-fit: contain;
+  background: #eef1e7;
+  border-radius: 6px;
+}
+.template-card .button-row {
+  gap: 6px;
+}
+.template-card .button {
+  font-size: 11px;
+  padding: 10px 12px;
+}
+@media (max-height: 760px) {
+  .guest-shell {
+    padding: 18px 24px;
+    gap: 16px;
+  }
+  .guest-controls {
+    gap: 12px;
+  }
+  .guest-tools {
+    gap: 12px;
+  }
+  .guest-tools .mode-button {
+    min-height: 58px;
+    gap: 6px;
+  }
+  .guest-bottom {
+    gap: 10px;
+  }
+  .guest-bottom .shutter {
+    min-height: 58px;
+  }
+  .guest-qr {
+    width: 72px;
+    height: 72px;
+  }
+}
+@media (max-width: 850px) {
+  .guest-layout {
+    grid-template-columns: minmax(0, 1fr) 218px;
+    gap: 18px;
+  }
+  .template-cards {
+    grid-template-columns: 1fr;
+  }
+}
 * {
   box-sizing: border-box;
 }

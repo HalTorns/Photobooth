@@ -1,4 +1,4 @@
-# Architecture V0.1
+# Architecture V0.2
 
 ## Décisions de réalisation
 
@@ -10,7 +10,9 @@ L’application ne charge aucune police, image ou dépendance depuis Internet au
 
 - `src/useCamera.ts` : sources caméra, webcam, simulation, aperçu digiCamControl, reconnexion.
 - `src/imaging.ts` : filtres, composition PNG, recadrage des rendus, montages.
-- `src/App.tsx` : parcours invités, prise de vue, organisateur, album.
+- `src/App.tsx` : prise de vue, organisateur, album et état des cadres.
+- `src/GuestView.tsx` : interface invités épurée et commandes du kiosque.
+- `assets/layouts.json` : dimensions des modèles et des six fenêtres du photomaton ; voir `docs/CADRES.md`.
 - `electron/digicam.cjs` : protocole HTTP digiCamControl. Testé avec un serveur simulant le protocole, pas avec un appareil réel.
 - `electron/main.cjs` : autorisations, PIN, fichiers, sessions, dialogues natifs, kiosque.
 - `electron/config.cjs` : schéma versionné, validation, stockage atomique, hachage du PIN.

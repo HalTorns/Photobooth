@@ -76,14 +76,13 @@ const repo = path.resolve(__dirname, "..");
     );
     await close();
     page = await launch();
-    await expect(
-      page.getByText("Caméra connectée", { exact: true }),
-    ).toBeVisible({ timeout: 20000 });
+    await expect(page.locator(".shutter")).toBeEnabled({ timeout: 20000 });
     await expect(
       page.getByAltText("QR code de la galerie de l’événement"),
     ).toBeVisible();
+    await page.getByRole("checkbox", { name: "Cadre", exact: true }).check();
     await page
-      .getByLabel("Cadre", { exact: true })
+      .getByLabel("Choix du cadre", { exact: true })
       .selectOption({ label: "Cadre rouge de test" });
     await page
       .getByRole("button", { name: "Noir & blanc", exact: true })
