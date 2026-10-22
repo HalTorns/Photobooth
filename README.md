@@ -364,6 +364,8 @@ pnpm dist
 
 Résultats : `release/Photobooth Setup 0.3.0.exe` et `release/win-unpacked/Photobooth.exe`. FFmpeg est inclus. Le premier empaquetage peut télécharger des outils ; prévoir Internet. Le paquet de développement n’a pas de certificat éditeur de confiance. Ne pas modifier/recompiler `dist/` pendant l’empaquetage.
 
+La commande d’empaquetage utilise explicitement `--publish never` : elle construit l’installateur sans tenter de créer une release GitHub ni demander de jeton de publication. Dans GitHub Actions, le fichier est ensuite conservé comme artefact privé du workflow.
+
 Pour les tests stickers contre l’exécutable empaqueté :
 
 ```powershell

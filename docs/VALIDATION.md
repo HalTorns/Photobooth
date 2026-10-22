@@ -2,6 +2,10 @@
 
 Windows x64. Les essais logiciels ne remplacent pas la recette sur le Nikon D3200 et le PC cible.
 
+## Correction de l’empaquetage GitHub Actions
+
+Le journal de l’exécution `39768518752` (commit `52c5cc5`) confirme que la compilation et toutes les suites de tests réussissent sur le runner Windows. L’installateur est généré, puis electron-builder échoue avec `GitHub Personal Access Token is not set` en tentant une publication implicite détectée en CI. La commande `pnpm dist` utilise désormais `--publish never`, pour produire le paquet sans publication de release ; le workflow conserve son étape de dépôt de l’installateur comme artefact.
+
 ## V0.3 — bibliothèque de stickers
 
 - Compilation TypeScript/Vite, contrôle des variables inutilisées et huit tests du moteur : réussis.

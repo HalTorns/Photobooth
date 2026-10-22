@@ -16,7 +16,7 @@
     "test:integration": "node scripts/integration.cjs",
     "test:frames": "node scripts/frames-test.cjs",
     "test:stickers": "node scripts/stickers-test.cjs",
-    "dist": "pnpm build && electron-builder --win nsis --x64"
+    "dist": "pnpm build && electron-builder --win nsis --x64 --publish never"
   },
   "dependencies": {
     "ffmpeg-static": "^5.2.0",
