@@ -1,4 +1,4 @@
-# Architecture V0.2
+# Architecture V0.3
 
 ## Décisions de réalisation
 
@@ -12,6 +12,7 @@ L’application ne charge aucune police, image ou dépendance depuis Internet au
 - `src/imaging.ts` : filtres, composition PNG, recadrage des rendus, montages.
 - `src/App.tsx` : prise de vue, organisateur, album et état des cadres.
 - `src/GuestView.tsx` : interface invités épurée et commandes du kiosque.
+- `src/useStickers.ts` : bibliothèque autorisée, images partagées et exemplaires à positions normalisées ; `src/StickerLayer.tsx` : manipulation par Pointer Events et corbeille. Voir `docs/STICKERS.md`.
 - `assets/layouts.json` : dimensions des modèles et des six fenêtres du photomaton ; voir `docs/CADRES.md`.
 - `electron/digicam.cjs` : protocole HTTP digiCamControl. Testé avec un serveur simulant le protocole, pas avec un appareil réel.
 - `electron/main.cjs` : autorisations, PIN, fichiers, sessions, dialogues natifs, kiosque.

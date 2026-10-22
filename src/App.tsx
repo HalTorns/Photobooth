@@ -42,6 +42,7 @@ import {
   montage,
 } from "./imaging";
 import { useCamera } from "./useCamera";
+import { useStickers } from "./useStickers";
 import GuestView from "./GuestView";
 import photoGuide from "../assets/templates/photo-reperes.png";
 import montageGuide from "../assets/templates/photomaton-reperes.png";
@@ -61,9 +62,7 @@ export default function App() {
   const [montageFrameEnabled, setMontageFrameEnabled] = useState(false);
   const [montageFrameImg, setMontageFrameImg] =
     useState<HTMLImageElement | null>(null);
-  const [sticker, setSticker] = useState("");
   const [frameImg, setFrameImg] = useState<HTMLImageElement | null>(null);
-  const [stickerImg, setStickerImg] = useState<HTMLImageElement | null>(null);
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
   const [phase, setPhase] = useState("");
@@ -82,6 +81,7 @@ export default function App() {
     (e: unknown) => setError(e instanceof Error ? e.message : String(e)),
     [],
   );
+  const stickerStudio = useStickers(event?.id, event?.assets, notify);
   useEffect(() => {
     api<Boot>("boot").then(setBoot).catch(notify);
     return window.photobooth.onCloseBlocked(setError);
@@ -94,7 +94,6 @@ export default function App() {
     setFrameEnabled(false);
     setMontageFrame("");
     setMontageFrameEnabled(false);
-    setSticker("");
     setResult(null);
   }, [event?.id]);
   useEffect(() => {
@@ -139,17 +138,6 @@ export default function App() {
   }, [montageFrame, montageFrameEnabled, event?.assets, notify]);
   useEffect(() => {
     let cancelled = false;
-    assetImage(sticker, event?.assets || [])
-      .then((img) => {
-        if (!cancelled) setStickerImg(img);
-      })
-      .catch(notify);
-    return () => {
-      cancelled = true;
-    };
-  }, [sticker, event?.assets, notify]);
-  useEffect(() => {
-    let cancelled = false;
     setQr("");
     if (event?.cloud && event.gallery)
       QRCode.toDataURL(event.gallery, {
@@ -182,7 +170,7 @@ export default function App() {
           raw,
           filter,
           mode === "series" ? null : frameImg,
-          stickerImg,
+          [],
         );
         latestPreview.current = out;
         const target = preview.current;
@@ -210,7 +198,6 @@ export default function App() {
     filter,
     frameImg,
     mode,
-    stickerImg,
   ]);
   const closeResult = useCallback(() => {
     setResult((current) => {
@@ -273,7 +260,7 @@ export default function App() {
       sized,
       filter,
       mode === "series" ? null : frameImg,
-      stickerImg,
+      stickerStudio.rendered,
     );
     const processed = jpeg(out);
     await api("saveFrame", { id: sessionId, original, processed });
@@ -324,7 +311,10 @@ export default function App() {
         performance.now() - start < event!.videoDuration * 1000
       ) {
         const raw = camera.snapshot(width);
-        const processed = jpeg(compose(raw, filter, frameImg, stickerImg), 0.9);
+        const processed = jpeg(
+          compose(raw, filter, frameImg, stickerStudio.rendered),
+          0.9,
+        );
         thumbnail = processed;
         await api("saveFrame", {
           id: sessionId,
@@ -401,7 +391,7 @@ export default function App() {
           );
           const raw = camera.snapshot(eco ? 480 : 640);
           const processed = jpeg(
-            compose(raw, filter, frameImg, stickerImg),
+            compose(raw, filter, frameImg, stickerStudio.rendered),
             0.88,
           );
           await api("saveFrame", { id, original: jpeg(raw, 0.92), processed });
@@ -449,6 +439,7 @@ export default function App() {
         video = animation;
         animation = undefined;
       }
+      stickerStudio.clear();
       setResult({
         id: saved.id,
         image: animation || image,
@@ -532,7 +523,9 @@ export default function App() {
           filter={filter}
           frame={mode === "series" ? montageFrame : frame}
           frameEnabled={mode === "series" ? montageFrameEnabled : frameEnabled}
-          sticker={sticker}
+          stickerAssets={stickerStudio.assets}
+          stickers={stickerStudio.placements}
+          readyStickerIds={new Set(stickerStudio.images.keys())}
           busy={busy}
           ready={camera.ready}
           native={native}
@@ -563,7 +556,9 @@ export default function App() {
           onFrameEnabled={
             mode === "series" ? setMontageFrameEnabled : setFrameEnabled
           }
-          onSticker={setSticker}
+          onAddSticker={stickerStudio.add}
+          onMoveSticker={stickerStudio.move}
+          onRemoveSticker={stickerStudio.remove}
           onCapture={capture}
           onAdmin={showAdmin}
           onReconnect={camera.reconnect}

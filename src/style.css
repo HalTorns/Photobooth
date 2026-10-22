@@ -77,6 +77,131 @@
   gap: 18px;
   min-height: 0;
 }
+.sticker-library {
+  flex: 1 0 100px;
+  min-height: 100px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid #e0e5d9;
+  background: #fafaf5;
+  border-radius: 12px;
+  padding: 10px;
+  scrollbar-width: thin;
+  touch-action: pan-y;
+}
+.sticker-library-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.sticker-tile {
+  min-height: 62px;
+  aspect-ratio: 1;
+  border-radius: 9px;
+  border: 1px solid #e0e6db;
+  background: #fffef9;
+  padding: 8px;
+  display: grid;
+  place-items: center;
+}
+.sticker-tile:hover {
+  background: #edf2e7;
+  border-color: #a7b99d;
+}
+.sticker-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+.sticker-library-empty {
+  font-size: 11px;
+  text-align: center;
+  padding: 28px 4px;
+  color: #94a08c;
+}
+.sticker-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.placed-sticker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  touch-action: none;
+  cursor: grab;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  user-select: none;
+}
+.placed-sticker img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.placed-sticker.is-dragging {
+  cursor: grabbing;
+  outline: 2px dashed #fff9;
+  outline-offset: 4px;
+}
+.placed-sticker:disabled {
+  opacity: 1;
+  cursor: default;
+  pointer-events: none;
+}
+.sticker-trash {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  color: #fffdf4;
+  background: #203e36c9;
+  border: 1px solid #ffffff70;
+  border-radius: 16px;
+  pointer-events: auto;
+  z-index: 2;
+  transition:
+    background 0.12s,
+    transform 0.12s;
+}
+.sticker-trash.is-over {
+  background: #b54d3d;
+  transform: scale(1.12);
+}
+.guest-capture .capture-overlay,
+.guest-capture .camera-empty {
+  z-index: 3;
+}
+.previous-photos-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid #cfdac8;
+  background: #edf1e7;
+  border-radius: 10px;
+  font-size: 12px;
+  color: #426846;
+}
+.previous-photos-button:hover {
+  background: #e4ebdc;
+}
+.guest-extras:empty {
+  display: none;
+}
 .guest-tools {
   display: flex;
   flex-direction: column;

@@ -10,7 +10,14 @@ import {
   Settings,
   Video,
 } from "lucide-react";
-import type { EventConfig, Filter, Mode } from "./types";
+import type {
+  Asset,
+  EventConfig,
+  Filter,
+  Mode,
+  StickerPlacement,
+} from "./types";
+import StickerLayer from "./StickerLayer";
 import { filterNames, modeNames } from "./types";
 import layouts from "../assets/layouts.json";
 const icons = {
@@ -26,7 +33,9 @@ type Props = {
   filter: Filter;
   frame: string;
   frameEnabled: boolean;
-  sticker: string;
+  stickerAssets: Asset[];
+  stickers: StickerPlacement[];
+  readyStickerIds: Set<string>;
   busy: boolean;
   ready: boolean;
   native: boolean;
@@ -40,7 +49,9 @@ type Props = {
   onFilter: (filter: Filter) => void;
   onFrame: (id: string) => void;
   onFrameEnabled: (enabled: boolean) => void;
-  onSticker: (id: string) => void;
+  onAddSticker: (assetId: string) => void;
+  onMoveSticker: (id: string, x: number, y: number) => void;
+  onRemoveSticker: (id: string) => void;
   onCapture: () => void;
   onAdmin: () => void;
   onReconnect: () => void;
@@ -51,9 +62,6 @@ export default function GuestView(p: Props) {
   const canFrame = !isMontage || p.event.layout === "photomaton";
   const frames = p.event.assets.filter(
     (a) => a.enabled && a.kind === (isMontage ? "montage-frame" : "frame"),
-  );
-  const stickers = p.event.assets.filter(
-    (a) => a.enabled && a.kind === "sticker",
   );
   const selectedFrame = frames.find((a) => a.id === p.frame) || frames[0];
   return (
@@ -74,6 +82,13 @@ export default function GuestView(p: Props) {
         <section className="guest-capture" aria-label="Prévisualisation caméra">
           <div className="viewfinder">
             <canvas ref={p.preview} width={960} height={720} />
+            <StickerLayer
+              placements={p.stickers}
+              assets={p.stickerAssets}
+              disabled={p.busy || !p.ready}
+              onMove={p.onMoveSticker}
+              onRemove={p.onRemoveSticker}
+            />
             {!p.ready && (
               <div className="camera-empty">
                 <Camera size={40} />
@@ -205,22 +220,32 @@ export default function GuestView(p: Props) {
                 </svg>
               )}
             </div>
-            {stickers.length > 0 && (
-              <select
-                aria-label="Sticker"
-                value={p.sticker}
-                disabled={p.busy}
-                onChange={(e) => p.onSticker(e.target.value)}
-              >
-                <option value="">Sans sticker</option>
-                {stickers.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name}
-                  </option>
-                ))}
-              </select>
-            )}
           </div>
+          <section
+            className="sticker-library"
+            aria-label="Bibliothèque de stickers"
+          >
+            {p.stickerAssets.length ? (
+              <div className="sticker-library-grid">
+                {p.stickerAssets.map((asset) => (
+                  <button
+                    key={asset.id}
+                    className="sticker-tile"
+                    aria-label={"Ajouter le sticker " + asset.name}
+                    title={asset.name}
+                    disabled={
+                      p.busy || !p.ready || !p.readyStickerIds.has(asset.id)
+                    }
+                    onClick={() => p.onAddSticker(asset.id)}
+                  >
+                    <img src={asset.data} alt="" draggable={false} />
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="sticker-library-empty">Aucun sticker activé</p>
+            )}
+          </section>
           <div className="guest-bottom">
             <div className="guest-extras">
               {p.qr && (
@@ -230,16 +255,15 @@ export default function GuestView(p: Props) {
                   alt="QR code de la galerie de l’événement"
                 />
               )}
-              <button
-                className="icon-button"
-                aria-label="Les derniers souvenirs"
-                title="Les derniers souvenirs"
-                disabled={p.busy}
-                onClick={p.onRecent}
-              >
-                <Grid2X2 size={22} />
-              </button>
             </div>
+            <button
+              className="previous-photos-button"
+              disabled={p.busy}
+              onClick={p.onRecent}
+            >
+              <Grid2X2 size={19} />
+              Voir les photos précédentes
+            </button>
             <button
               className="shutter"
               disabled={p.captureDisabled}

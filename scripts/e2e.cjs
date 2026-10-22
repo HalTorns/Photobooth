@@ -132,7 +132,9 @@ const errors = [];
       );
       await page.getByRole("button", { name: "Encore un souvenir" }).click();
     }
-    await page.getByRole("button", { name: "Les derniers souvenirs" }).click();
+    await page
+      .getByRole("button", { name: "Voir les photos précédentes" })
+      .click();
     await expect(page.locator(".recent-grid article")).toHaveCount(5);
     await page.getByRole("button", { name: "Retour à la capture" }).click();
     // Leave an interrupted session and verify it is reported after a forced process exit.

@@ -2,18 +2,19 @@
 
 Application tactile Windows, utilisable hors ligne, pour créer photos, séries, GIF, boomerangs et vidéos pendant un événement.
 
-**État : V0.2 de développement.** Les parcours logiciels sont exécutables avec une caméra simulée. Les webcams et le pilote digiCamControl nécessitent une recette sur les périphériques réels. La compatibilité Nikon D3200 reste à valider.
+**État : V0.3 de développement.** Les parcours logiciels sont exécutables avec une caméra simulée. Les webcams et le pilote digiCamControl nécessitent une recette sur les périphériques réels. La compatibilité Nikon D3200 reste à valider.
 
 ## Utiliser la version Windows
 
-L’installateur est généré dans `release/Photobooth Setup 0.2.0.exe`. Le premier lancement demande de créer un PIN de 4 ou 6 chiffres ; aucun code n’est prédéfini. Choisir le dossier de stockage et la caméra dans l’espace organisateur, puis revenir aux invités. L’engrenage ouvre les réglages protégés par PIN.
+L’installateur est généré dans `release/Photobooth Setup 0.3.0.exe`. Le premier lancement demande de créer un PIN de 4 ou 6 chiffres ; aucun code n’est prédéfini. Choisir le dossier de stockage et la caméra dans l’espace organisateur, puis revenir aux invités. L’engrenage ouvre les réglages protégés par PIN.
 
 Le mode **simulation** fonctionne sans appareil. Les images simulées sont identifiées comme telles. Le microphone n’est demandé que pour une vidéo dont le son a été activé par l’organisateur.
 
 ## Fonctionnalités
 
 - Interface React/TypeScript en français, adaptée aux écrans paysage tactiles.
-- Décompte configurable, photo avec original conservé, filtres, cadres PNG et stickers.
+- Décompte configurable, photo avec original conservé, filtres et cadres PNG.
+- Bibliothèque de stickers visuelle, ajouts multiples, déplacement tactile/souris, corbeille et remise à zéro après capture.
 - Photomaton vertical de six photos (2 × 3), zone blanche basse personnalisable, autres formats disponibles.
 - Interface invités épurée et case Cadre dans le kiosque ; modèles PNG et repères téléchargeables.
 - GIF et boomerang, avec double export GIF/MP4 pour le boomerang.
@@ -41,6 +42,7 @@ pnpm test        # configuration, PIN, fichiers, protocole caméra simulé, enco
 pnpm test:e2e    # application Electron : cinq modes, persistance, PIN, reprise
 pnpm test:integration # webcam/micro simulés par Chromium, PNG, QR et modèles
 pnpm test:frames      # migration, téléchargement PNG, kiosque et montage 2 × 3
+pnpm test:stickers    # gestes souris/tactiles, bibliothèque et stickers dans les cinq modes
 pnpm dist        # installateur NSIS Windows x64 dans release/
 ```
 
@@ -55,6 +57,7 @@ Synchroniser le dossier choisi avec le client kDrive, partager le sous-dossier `
 ## Documents
 
 - [Cahier des charges fourni V0.6](docs/CAHIER_DES_CHARGES_V0.6.txt)
+- [Stickers interactifs et album local](docs/STICKERS.md)
 - [Cadres, modèles PNG et photomaton 6 photos](docs/CADRES.md)
 - [Architecture et décisions](docs/ARCHITECTURE.md)
 - [Recette sur le matériel cible](docs/TESTS_MATERIEL.md)

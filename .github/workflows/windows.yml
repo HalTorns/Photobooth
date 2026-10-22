@@ -25,6 +25,7 @@ jobs:
       - run: pnpm test:e2e
       - run: pnpm test:integration
       - run: pnpm test:frames
+      - run: pnpm test:stickers
       - run: pnpm dist
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"

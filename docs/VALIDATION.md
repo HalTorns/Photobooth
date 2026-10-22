@@ -2,6 +2,17 @@
 
 Windows x64. Les essais logiciels ne remplacent pas la recette sur le Nikon D3200 et le PC cible.
 
+## V0.3 — bibliothèque de stickers
+
+- Compilation TypeScript/Vite, contrôle des variables inutilisées et huit tests du moteur : réussis.
+- Suites Electron des cinq modes, webcam/microphone simulés et cadres : réussies, dont migration, modèles téléchargeables et six cellules du photomaton.
+- Bibliothèque défilante, ajout de 35 exemplaires d’un même sticker au centre, déplacement à la souris et par gestes tactiles simulés, suppression par dépôt dans la corbeille : réussis.
+- Affichage compact à 1024 × 720 : bibliothèque accessible, QR et déclencheur visibles, bouton « Voir les photos précédentes » au-dessus du déclencheur et ouverture de l’album vérifiés.
+- Exports photo, GIF, boomerang, vidéo et photomaton : position des stickers contrôlée dans les rendus, suppression effective d’un exemplaire vérifiée, originaux sans stickers et aperçu vidé après chaque capture réussie.
+- Suite dédiée : `scripts/stickers-test.cjs` ; capture de contrôle : `test-results/stickers.png`.
+- Cette suite complète a également réussi contre l’exécutable Windows empaqueté `release/win-unpacked/Photobooth.exe`, pour les gestes, l’album et les exports des cinq modes.
+- Installateur local : `release/Photobooth Setup 0.3.0.exe`. SHA-256 : `5BD5CE07556AC1B3B0EB069B726597550855DF0A5BC619BE5856F811D72FD730`.
+
 ## V0.2 — interface invités et cadres
 
 - Interface limitée au nom de l’événement, aperçu caméra et commandes latérales ; QR sans texte décoratif.

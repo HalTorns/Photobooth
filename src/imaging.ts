@@ -1,4 +1,4 @@
-import type { Asset, Filter } from "./types";
+import type { Asset, Filter, StickerPlacement } from "./types";
 import layouts from "../assets/layouts.json";
 export const filters: Record<Filter, string> = {
   normal: "none",
@@ -73,7 +73,7 @@ export function compose(
   raw: HTMLCanvasElement,
   filter: Filter,
   frame: HTMLImageElement | null,
-  sticker: HTMLImageElement | null,
+  stickers: { placement: StickerPlacement; image: HTMLImageElement }[] = [],
 ) {
   const c = canvas(raw.width, raw.height);
   const ctx = c.getContext("2d")!;
@@ -81,17 +81,14 @@ export function compose(
   ctx.drawImage(raw, 0, 0);
   ctx.filter = "none";
   if (frame) ctx.drawImage(frame, 0, 0, c.width, c.height);
-  if (sticker) {
-    const w = c.width * 0.23;
-    const h = (w * sticker.height) / sticker.width;
+  for (const { placement: p, image } of stickers)
     ctx.drawImage(
-      sticker,
-      c.width - w - c.width * 0.04,
-      c.height - h - c.height * 0.04,
-      w,
-      h,
+      image,
+      (p.x - p.width / 2) * c.width,
+      (p.y - p.height / 2) * c.height,
+      p.width * c.width,
+      p.height * c.height,
     );
-  }
   return c;
 }
 export async function montage(

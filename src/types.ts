@@ -7,6 +7,14 @@ export type Asset = {
   enabled: boolean;
   data: string;
 };
+export type StickerPlacement = {
+  id: string;
+  assetId: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
 export type EventConfig = {
   id: string;
   name: string;
