@@ -1,0 +1,38 @@
+name: Windows build and tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm test
+      - run: pnpm test:e2e
+      - run: pnpm test:integration
+      - run: pnpm dist
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Photobooth-Windows-x64
+          path: release/*.exe
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-screenshots
+          path: test-results/*.png

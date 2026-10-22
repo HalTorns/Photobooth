@@ -1,0 +1,313 @@
+Photobooth : cahier des charges V0.6
+50 décisions fonctionnelles validées
+Nous avons terminé les cinq séries de questions. Le projet est maintenant suffisamment défini pour préparer le développement.
+Trois décisions structurantes ressortent de cette dernière série :
+- Simplicité : détection automatique des caméras, réglages essentiels uniquement et qualité optimisée automatiquement.
+- Fiabilité : reconnexion des caméras, mode kiosque protégé par PIN et sauvegarde des configurations.
+- Distribution : logiciel gratuit, open source sur GitHub, avec un installateur Windows .exe.
+Et surtout, nous simplifions définitivement l'architecture cloud : le photobooth écrit les fichiers dans le dossier choisi, et l'application kDrive se charge de les synchroniser. Nous n'allons pas recréer un client de synchronisation.
+1. Document de référence V0.6
+Voici le cahier des charges consolidé, qui servira de référence pour les développements.
+Cahier des charges fonctionnel V0.6
+Logiciel Photobooth open source
+Version : 0.6
+Date : 21 octobre 2026
+Statut : 50 décisions validées, prototype matériel à réaliser
+1. Objectif du projet
+Développer une application de photobooth gratuite, open source, adaptée aux événements privés ou publics et fonctionnant sous Windows 11 avec un écran tactile.
+Le logiciel doit fonctionner intégralement sans connexion Internet pour la capture, le traitement et le stockage des médias.
+Il doit être compatible avec plusieurs familles de caméras au moyen de pilotes interchangeables, et permettre le partage facultatif des photos en ligne via kDrive.
+2. Environnement matériel
+- Windows 11.
+- Compatibilité avec des ordinateurs peu puissants.
+- Interface tactile en orientation paysage.
+- Appareil principal de développement : Nikon D3200 connecté en USB.
+- Priorité aux appareils Canon et Nikon.
+- Architecture extensible aux webcams, GoPro, iPhone et Sony.
+- Une seule caméra active simultanément.
+- Détection automatique des caméras, avec sélection manuelle possible.
+- Reconnexion automatique après une déconnexion ; alerte si la reconnexion échoue.
+- Réglages caméra limités aux fonctions essentielles.
+- Optimisation automatique de la qualité des médias selon les capacités matérielles.
+3. Interface des invités
+- Affichage permanent de la prévisualisation de la caméra.
+- Gros boutons tactiles autour de l'aperçu.
+- Interface commune à tous les événements.
+- Sélection du mode de capture parmi ceux autorisés par l'organisateur.
+- Sélection des cadres et des effets autorisés.
+- Compte à rebours de 5 secondes par défaut, configurable.
+- Affichage du résultat après chaque capture.
+- Retour automatique à l'écran principal.
+- QR code de la galerie visible en permanence et sur l'écran de résultat lorsque le partage cloud est activé.
+4. Modes de capture
+4.1. Photo simple
+Déclenchement après un compte à rebours. Application du cadre et des effets sélectionnés, puis enregistrement du média final et de l'original.
+4.2. Série photographique
+- Six photos par défaut.
+- Trois secondes entre les prises par défaut.
+- Nombre de photos et intervalle configurables.
+- Enregistrement de chaque photo originale.
+- Production d'un montage regroupant les photos.
+- Plusieurs formats et ratios de montage disponibles.
+4.3. GIF animé
+- Capture d'une succession de photos.
+- Durée de capture paramétrable par l'organisateur.
+- Vitesse de lecture paramétrable par l'organisateur.
+- Application des cadres et effets sélectionnés.
+- Export au format GIF.
+4.4. Boomerang
+- Durée de capture paramétrable.
+- Lecture des images en avant puis en arrière.
+- Export en MP4 et GIF.
+- Adaptation aux capacités du périphérique.
+4.5. Vidéo courte
+- Durée maximale par défaut : 10 secondes.
+- Enregistrement du son activable ou désactivable par l'organisateur.
+- Export dans un format vidéo compatible avec les smartphones, de préférence MP4.
+- Disponibilité du mode conditionnée aux capacités de la caméra et du matériel.
+5. Cadres, stickers et effets
+- Importation de cadres PNG transparents.
+- Importation de stickers PNG.
+- Organisation des cadres et stickers par événement.
+- Activation ou désactivation individuelle des éléments.
+- Choix laissé aux invités parmi les éléments autorisés.
+- Filtres simples : noir et blanc, sépia et autres traitements peu gourmands.
+- Aperçu des effets en direct.
+- Application des mêmes effets aux médias exportés.
+- Aucun éditeur graphique avancé ni éditeur de texte requis.
+- Aucun effet animé complexe demandé.
+6. Gestion des événements
+Le logiciel doit permettre de créer et configurer un événement contenant :
+- Son nom et ses paramètres.
+- La caméra sélectionnée.
+- Les modes de capture autorisés.
+- Les paramètres de chaque mode.
+- Les cadres, stickers et filtres disponibles.
+- Le répertoire de stockage local.
+- L'activation éventuelle du partage cloud.
+- L'adresse de partage de la galerie.
+Les paramètres sont enregistrés automatiquement.
+Le logiciel doit également permettre :
+- D'exporter une configuration.
+- D'importer une configuration.
+- De créer des modèles d'événements réutilisables.
+- De conserver les configurations de plusieurs événements.
+7. Administration et sécurité locale
+- Espace organisateur protégé par un code PIN à 4 ou 6 chiffres.
+- Interface invités en plein écran.
+- Sortie normale du mode kiosque uniquement après saisie du PIN.
+- Protection des réglages contre les modifications accidentelles.
+- Possibilité de sélectionner ou changer la caméra.
+- Paramètres de capture essentiels seulement.
+- Qualité optimisée automatiquement.
+- Détection des erreurs de caméra, de stockage et d'enregistrement.
+Le verrouillage applicatif devra être distingué d'un éventuel verrouillage renforcé de Windows.
+8. Stockage local
+- L'organisateur choisit le répertoire de stockage.
+- Un sous-dossier est créé automatiquement pour chaque événement.
+- Les photos originales sont conservées.
+- Les montages et médias finaux sont enregistrés séparément.
+- Les vidéos, GIF et boomerangs disposent de dossiers dédiés.
+- Aucun fichier n'est supprimé automatiquement.
+- Conservation illimitée, sous réserve de l'espace disque disponible.
+- Suppression manuelle uniquement.
+- Fonctionnement intégral sans Internet.
+9. Synchronisation kDrive
+La synchronisation repose exclusivement sur l'application officielle kDrive installée sur Windows.
+Lors de la création de l'événement, l'organisateur choisit d'activer ou non le partage cloud.
+Si cette fonction est activée :
+- Le dossier choisi doit être synchronisé par kDrive.
+- Le photobooth enregistre les médias directement dans ce dossier.
+- Tous les médias finaux et toutes les photos originales sont concernés par la synchronisation.
+- kDrive effectue seul les transferts, les reprises et la gestion du réseau.
+- Aucune API kDrive ni moteur de synchronisation spécifique ne sont nécessaires pour la capture et le transfert.
+L'application peut guider l'organisateur dans cette configuration, mais ne doit pas prétendre contrôler directement l'état des transferts kDrive sans intégration supplémentaire.
+10. Galerie et QR code
+- Un QR code unique par événement.
+- Accès à toutes les photos publiées de la soirée.
+- Accès public pour toute personne possédant le lien.
+- Aucune authentification demandée aux invités.
+- Publication automatique des médias.
+- Galerie consultable sur smartphone.
+- Affichage du QR code en permanence et après chaque capture.
+- Les fichiers originaux sont également synchronisés vers kDrive.
+Objectif de galerie : interface web personnalisée, adaptée aux smartphones.
+Solution de transition : lien public kDrive.
+Le fonctionnement exact de la galerie personnalisée constitue un développement distinct de la synchronisation.
+11. Installation et distribution
+- Application gratuite.
+- Projet open source hébergé sur GitHub.
+- Installateur Windows classique au format .exe.
+- Lancement manuel depuis un raccourci.
+- Aucun démarrage automatique imposé.
+- Fonctionnement sans abonnement.
+- Aucune connexion Internet obligatoire pour lancer l'application ou prendre des photos.
+- Dépendances nécessaires au fonctionnement local installées ou documentées.
+12. Architecture cible
+Architecture modulaire comportant :
+1. Une interface tactile légère en React et TypeScript.
+2. Un moteur local de capture et de traitement multimédia.
+3. Un système de pilotes de caméras interchangeables.
+4. Un gestionnaire de configurations et d'événements.
+5. Un système de stockage local.
+6. Un module de génération de QR codes.
+7. Une galerie web, à développer indépendamment de la synchronisation kDrive.
+Le choix définitif entre adaptation d'un projet existant et développement d'un moteur spécifique sera effectué après validation du prototype Nikon D3200.
+13. Critères généraux d'acceptation
+Le logiciel doit pouvoir :
+- Démarrer sans Internet.
+- Détecter une caméra prise en charge.
+- Afficher son aperçu si la caméra le permet.
+- Déclencher une photo et enregistrer son original.
+- Produire une image finale avec cadre et filtre.
+- Enregistrer une série et son montage.
+- Gérer proprement les modes incompatibles avec une caméra.
+- Ne pas perdre les médias après une interruption de l'application.
+- Reprendre son fonctionnement après une déconnexion temporaire de la caméra.
+- Fonctionner sur un PC Windows 11 peu puissant.
+- Protéger les paramètres organisateur par PIN.
+- Utiliser un dossier synchronisé par kDrive sans dépendance à Internet pour la capture.
+Fin du cahier des charges V0.6.
+
+
+
+
+2. Vérification des choix techniques
+Les recherches confirment que nous avons une base sérieuse pour commencer, mais elles font ressortir trois points à ne pas sous-estimer.
+Photobooth-App reste le meilleur candidat open source
+Photobooth-App sur GitHub utilise Python et Vue 3, possède une licence MIT et fonctionne notamment sous Windows. Il propose déjà les photos, montages, GIF, boomerangs et aperçus en direct.
+
+GitHub
+
+
+
+Nous pourrions conserver une partie de son moteur Python et développer notre interface React, mais il faudra comparer cette approche à un fork complet avant de choisir.
+
+
+Le Nikon D3200 est compatible sur le papier, mais nécessite des tests
+Il figure dans la liste officielle digiCamControl. L'interface HTTP de ce logiciel permet notamment le déclenchement, l'accès aux images et la récupération du Live View.
+
+digicamcontrol.com
++1
+
+
+
+Il existe toutefois des signalements concernant l'autofocus du D3200 en Live View. La reconnaissance USB ne suffit donc pas pour garantir toutes les fonctionnalités.
+
+GitHub
+
+
+
+
+
+Le mode kiosque doit être conçu à deux niveaux
+Nous pouvons verrouiller les commandes du photobooth par PIN et utiliser un plein écran sans bordures. Mais empêcher réellement les raccourcis système et le changement d'application dépend de Windows.
+Microsoft réserve notamment certaines configurations kiosque de bureau aux éditions Enterprise ou Education.
+
+Microsoft Learn
+
+
+
+Nous devrons donc connaître l'édition exacte de ton Windows 11 avant de promettre un verrouillage système complet.
+
+
+
+3. Le point particulier de la galerie kDrive
+La synchronisation est réglée : kDrive sait synchroniser un dossier Windows choisi, y compris hors de son répertoire standard.
+
+infomaniak.com
+
+
+
+En revanche, une galerie personnalisée ne peut pas simplement remplacer l'interface d'un lien public kDrive.
+Je distingue deux livrables :
+V1 : galerie kDrive
+Le QR code ouvre le dossier public de l'événement. Aucun hébergement ou serveur supplémentaire.
+
+Simple
+
+
+V2 : galerie personnalisée
+Un véritable site mobile avec miniatures, filtres photo/vidéo et téléchargements. Il faudra un hébergement web et un moyen sécurisé d'accéder aux fichiers kDrive.
+
+À concevoir
+
+
+La synchronisation restera assurée par kDrive dans les deux cas. Nous n'aurons pas besoin de réécrire le transfert des photos.
+Je recommande aussi de synchroniser tous les originaux comme demandé, mais de ne partager publiquement que les créations finales, via un sous-dossier dédié. Les originaux seront ainsi conservés dans le cloud sans encombrer la galerie des invités. Ce comportement précis reste à valider.
+4. Les tests techniques à effectuer avant de développer la V1
+Voici les critères du premier prototype. Aucun de ces tests n'a encore été exécuté sur ton matériel.
+Priorité	Test	Résultat attendu
+P0	Détection Nikon D3200 USB	Appareil reconnu
+P0	Déclenchement photo	JPG haute résolution enregistré
+P0	Live View	Aperçu exploitable sans blocage
+P0	Série de 6 photos	Six originaux récupérés, avec intervalle cible de 3 s
+P1	Capture + aperçu simultanés	Reprise automatique de l'aperçu après la photo
+P1	GIF et boomerang	Fluidité suffisante et export fiable
+P1	Vidéo et son	Capacités identifiées, repli si non compatibles
+P1	Performances du PC	Pas de blocage pendant le traitement
+P2	Kiosque et PIN	Retour aux réglages contrôlé
+P2	Dossier kDrive	Transfert automatique vers le cloud
+P2	QR code	Consultation de la galerie depuis un téléphone
+Les tests P0 sont bloquants pour une V1 utilisant le Nikon D3200 comme seule caméra, particulièrement puisque tu souhaites un aperçu permanent.
+5. Les décisions encore ouvertes
+Configuration exacte du PC
+Processeur, mémoire RAM, édition Windows et performances disponibles. Nous devrons les mesurer pour définir les résolutions et traitements automatiques.
+
+
+
+Solution de secours pour les caméras
+Si le Nikon ne peut pas produire certaines vidéos ou animations, prévoir soit une solution de capture vidéo externe, soit la désactivation de ces modes sur cet appareil.
+
+
+
+Organisation des photos publiques
+Faut-il afficher les originaux dans la galerie ou uniquement les créations finales ? Les deux pourront être stockés sur kDrive.
+
+
+
+Hébergement de la galerie personnalisée
+Définir comment un site mobile indépendant affichera les fichiers du kDrive, sans exposer les identifiants Infomaniak.
+
+
+
+Structure et distribution du dépôt GitHub
+Choisir entre fork et moteur réutilisé, fixer la licence finale et vérifier celles des dépendances avant de publier l'installateur.
+
+
+
+Ces éléments ne nécessitent pas tous une nouvelle série de questions : plusieurs peuvent être tranchés directement pendant les tests ou par des choix techniques raisonnables.
+6. Mon plan pour commencer le développement
+1
+
+Prototype matériel
+Créer un petit outil permettant de sélectionner le Nikon, afficher l'aperçu, prendre une photo et l'enregistrer. Sans interface photobooth complète.
+
+
+2
+
+Choix de la base logicielle
+Tester le moteur Photobooth-App sur Windows et décider quelles parties réutiliser. Préparer le dépôt GitHub.
+
+
+3
+
+Première application tactile
+Construire l'interface React, le mode photo, le décompte, les cadres PNG et les paramètres organisateur.
+
+
+4
+
+Fonctionnalités événementielles
+Ajouter les séries, montages, GIF, boomerangs, vidéos compatibles, QR codes et dossiers kDrive.
+
+
+5
+
+Distribution Windows
+Finaliser le kiosque, l'installateur .exe, les tests de stabilité et la publication open source.
+
+
+
+Mon choix pour la V1 : React + TypeScript pour l'interface, un moteur local Python réutilisant si possible Photobooth-App et digiCamControl, puis Tauri pour l'application Windows, sous réserve des premiers tests de compatibilité.
+Nous avons désormais un périmètre fonctionnel cohérent. La prochaine étape utile n'est plus un questionnaire : c'est un prototype minimal avec le Nikon D3200, car le reste de l'architecture dépend surtout de la manière dont nous pourrons réellement le piloter sous Windows 11.
